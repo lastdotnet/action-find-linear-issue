@@ -6,6 +6,8 @@ inputs:
     required: true
   linear-issue-label-ids:
     description: "Comma deliminated label ids to add once issue is found"
+  linear-project-ids:
+    description: "Comma deliminated project ids to filter issues by project"
 outputs:
   linear-issue-id:
     description: "The unique identifier of the Linear issue. (UUID)"
