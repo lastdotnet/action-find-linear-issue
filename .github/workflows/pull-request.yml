@@ -16,6 +16,9 @@ jobs:
   create-linear-issue-on-pull-request:
     runs-on: ubuntu-latest
     name: A test job
+    permissions:
+      pull-requests: write
+      contents: read
     steps:
       # To use this repository's private action,
       # you must check out the repository
