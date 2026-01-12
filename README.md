@@ -8,9 +8,11 @@ This is helpful when you're:
 
 ## Inputs
 
-| Input            | Description                                                                        | Required |
-| ---------------- | ---------------------------------------------------------------------------------- | -------- |
-| `linear-api-key` | Linear API key generated from https://linear.app/settings/api . (e.g. `lin_api_*)` | ✅       |
+| Input                 | Description                                                                        | Required |
+| --------------------- | ---------------------------------------------------------------------------------- | -------- |
+| `linear-api-key`      | Linear API key generated from https://linear.app/settings/api . (e.g. `lin_api_*)` | ✅       |
+| `linear-project-ids`  | Comma delimited project IDs to filter issues by project                            | ❌       |
+| `linear-issue-label-ids` | Comma delimited label IDs to add once issue is found                            | ❌       |
 
 ## Outputs
 
@@ -48,6 +50,8 @@ jobs:
         uses: ctriolo/action-find-linear-issue@v0.6
         with:
           linear-api-key: ${{secrets.LINEAR_API_KEY}}
+          linear-project-ids: "project-id-1,project-id-2"
+          linear-issue-label-ids: "label-id-1,label-id-2"
 
       - name: Create comment in PR with Linear Issue link
         uses: peter-evans/create-or-update-comment@v2

@@ -35,20 +35,29 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
  * @param linearClient LinearClient instance
  * @param team Linear team object
  * @param issueNumber Issue number to search for the "123" in "ENG-123"
+ * @param projectId Optional project ID to filter by
  * @returns The issue if it exists
  */
-const getIssueByTeamAndNumber = async (linearClient, team, issueNumber) => {
-    const issues = await linearClient.issues({
-        filter: {
-            team: {
-                id: {
-                    eq: team.id,
-                },
-            },
-            number: {
-                eq: issueNumber,
+const getIssueByTeamAndNumber = async (linearClient, team, issueNumber, projectId) => {
+    const filter = {
+        team: {
+            id: {
+                eq: team.id,
             },
         },
+        number: {
+            eq: issueNumber,
+        },
+    };
+    if (projectId) {
+        filter.project = {
+            id: {
+                eq: projectId,
+            },
+        };
+    }
+    const issues = await linearClient.issues({
+        filter,
     });
     if (issues.nodes.length === 0) {
         console.log(`Failed to find issue ${team.key}-${issueNumber}`);
@@ -125,6 +134,7 @@ const main = async () => {
             return;
         }
         const labelIds = getIdsFromInput((0, core_1.getInput)("linear-issue-label-ids"));
+        const projectIds = getIdsFromInput((0, core_1.getInput)("linear-project-ids"));
         for (const team of teams) {
             // TODO: Iterate over multiple matches and not just first match
             const regexString = `${team.key}-(?<issueNumber>\\d+)`;
@@ -135,18 +145,22 @@ const main = async () => {
             const issueNumber = check?.groups?.issueNumber;
             if (issueNumber) {
                 (0, core_1.debug)(`Found issue number: ${issueNumber}`);
-                const issue = await (0, getIssueByTeamAndNumber_1.default)(linearClient, team, Number(issueNumber));
-                if (issue) {
-                    (0, addLabels_1.default)(linearClient, issue, labelIds);
-                    (0, core_1.setOutput)("linear-team-id", team.id);
-                    (0, core_1.setOutput)("linear-team-key", team.key);
-                    (0, core_1.setOutput)("linear-issue-id", issue.id);
-                    (0, core_1.setOutput)("linear-issue-number", issue.number);
-                    (0, core_1.setOutput)("linear-issue-identifier", issue.identifier);
-                    (0, core_1.setOutput)("linear-issue-url", issue.url);
-                    (0, core_1.setOutput)("linear-issue-title", issue.title);
-                    (0, core_1.setOutput)("linear-issue-description", issue.description);
-                    return;
+                // If project IDs are provided, try each one; otherwise search without project filter
+                const projectIdsToTry = projectIds.length > 0 ? projectIds : [undefined];
+                for (const projectId of projectIdsToTry) {
+                    const issue = await (0, getIssueByTeamAndNumber_1.default)(linearClient, team, Number(issueNumber), projectId);
+                    if (issue) {
+                        (0, addLabels_1.default)(linearClient, issue, labelIds);
+                        (0, core_1.setOutput)("linear-team-id", team.id);
+                        (0, core_1.setOutput)("linear-team-key", team.key);
+                        (0, core_1.setOutput)("linear-issue-id", issue.id);
+                        (0, core_1.setOutput)("linear-issue-number", issue.number);
+                        (0, core_1.setOutput)("linear-issue-identifier", issue.identifier);
+                        (0, core_1.setOutput)("linear-issue-url", issue.url);
+                        (0, core_1.setOutput)("linear-issue-title", issue.title);
+                        (0, core_1.setOutput)("linear-issue-description", issue.description);
+                        return;
+                    }
                 }
             }
         }

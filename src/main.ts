@@ -44,6 +44,7 @@ const main = async () => {
     }
 
     const labelIds = getIdsFromInput(getInput("linear-issue-label-ids"));
+    const projectIds = getIdsFromInput(getInput("linear-project-ids"));
     for (const team of teams) {
       // TODO: Iterate over multiple matches and not just first match
       const regexString = `${team.key}-(?<issueNumber>\\d+)`;
@@ -55,22 +56,29 @@ const main = async () => {
 
       if (issueNumber) {
         debug(`Found issue number: ${issueNumber}`);
-        const issue = await getIssueByTeamAndNumber(
-          linearClient,
-          team,
-          Number(issueNumber),
-        );
-        if (issue) {
-          addLabels(linearClient, issue, labelIds);
-          setOutput("linear-team-id", team.id);
-          setOutput("linear-team-key", team.key);
-          setOutput("linear-issue-id", issue.id);
-          setOutput("linear-issue-number", issue.number);
-          setOutput("linear-issue-identifier", issue.identifier);
-          setOutput("linear-issue-url", issue.url);
-          setOutput("linear-issue-title", issue.title);
-          setOutput("linear-issue-description", issue.description);
-          return;
+
+        // If project IDs are provided, try each one; otherwise search without project filter
+        const projectIdsToTry =
+          projectIds.length > 0 ? projectIds : [undefined];
+        for (const projectId of projectIdsToTry) {
+          const issue = await getIssueByTeamAndNumber(
+            linearClient,
+            team,
+            Number(issueNumber),
+            projectId,
+          );
+          if (issue) {
+            addLabels(linearClient, issue, labelIds);
+            setOutput("linear-team-id", team.id);
+            setOutput("linear-team-key", team.key);
+            setOutput("linear-issue-id", issue.id);
+            setOutput("linear-issue-number", issue.number);
+            setOutput("linear-issue-identifier", issue.identifier);
+            setOutput("linear-issue-url", issue.url);
+            setOutput("linear-issue-title", issue.title);
+            setOutput("linear-issue-description", issue.description);
+            return;
+          }
         }
       }
     }
